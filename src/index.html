@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Topology Monitor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!--link rel="stylesheet/less" href="less/bootstrap.less" type="text/css" /-->
+    <!--link rel="stylesheet/less" href="less/responsive.less" type="text/css" /-->
+    <!--script src="js/less-1.3.3.min.js"></script-->
+    <!--append ‘#!watch’ to the browser URL, then refresh the page. -->
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet">
+    <link href="css/sb-admin.css" rel="stylesheet">
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+    <script src="js/html5shiv.js"></script>
+    <![endif]-->
+
+    <!-- Fav and touch icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="img/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="img/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="img/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="img/apple-touch-icon-57-precomposed.png">
+    <link rel="shortcut icon" href="img/favicon.png">
+
+
+    <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/sb-admin.js"></script>
+    <script type="text/javascript" src="js/scripts.js"></script>
+    <script type="text/javascript" src="js/fabric.js"></script>
+    <script type="text/javascript" src="js/prism.js"></script>
+    <script type="text/javascript" src="js/master.js"></script>
+    <script type="text/javascript" src="js/Monitor_Basic.js"></script>
+    <script type="text/javascript" src="js/Monitor_Table.js"></script>
+    <script type="text/javascript" src="js/Monitor_MainInspector.js"></script>
+    <script type="text/javascript" src="js/Monitor_Canvas.js"></script>
+    <script type="text/javascript" src="js/Monitor_GoogleChart.js"></script>
+    <script type="text/javascript" src="js/Monitor_LinkStatus.js"></script>
+    <script type="text/javascript" src="js/parseadxml.js"></script>
+    <script type='text/javascript' src='https://www.google.com/jsapi'></script><!JSAPI>
+    <script type="text/javascript" src="js/webSocket_Monitor.js"></script>
+    <script type="text/javascript" src="js/multithread.js"></script>
+</head>
+
+<body>
+<div id="wrapper">
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation" style="margin-bottom: 0">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="index.html">Topology Monitor v2.0</a>
+    </div>
+    <!-- /.navbar-header -->
+    <ul class="nav navbar-top-links navbar-right">
+        <li>
+            <a onclick="rollToTop()"><i class="fa fa-level-up fa-2x"></i>Get To Top</a>
+        </li>
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                <i class="fa fa-external-link fa-2x"></i>  <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-messages">
+                <li>
+                    <a href="../Generator/index.html">
+                        <div>
+                            <strong>Generator</strong>
+                        </div>
+                        <div>Click and Link to Topology Generator</div>
+                    </a>
+                </li>
+            </ul>
+            <!-- /.dropdown-messages -->
+        </li>
+        <!-- /.dropdown -->
+    </ul>
+    <!-- /.navbar-top-links -->
+</nav>
+
+<div id="page-wrapper">
+<div class="row">
+    <div class="col-lg-12">
+        <div class="btn-group page-header">
+        </div>
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->
+<div class="row">
+    <div class="col-lg-8">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i> Topology View Panel
+                <div class="pull-right">
+                    <select class="form-control" id="SliceSelect" onchange="changeSliceSelect()">
+                        <option value="-1">Overview</option>
+                        <option value="-2">UnSlice</option>
+                    </select>
+                </div>
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body" id="CanvasDiv">
+                <canvas id="c"  width="1010" height="600" style="border:1px solid #ccc" ></canvas>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i> Components Infomation Panel
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="table-responsive">
+                            <p>VM</p>
+                            <table class="table" id="vm_info_table" >
+                                <thead>
+                                <tr><!--danger active warning success-->
+                                    <th>#</th>
+                                    <th>Components</th>
+                                    <th>CPU</th>
+                                    <th>RAM</th>
+                                    <th>Slice</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                            <p>Controller</p>
+                            <table class="table" id="controller_info_table" >
+                                <thead>
+                                <tr><!--danger active warning success-->
+                                    <th>#</th>
+                                    <th>Controller</th>
+                                    <th>Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                            <p>OpenStack</p>
+                            <table class="table" id="openstack_info_table" >
+                                <thead>
+                                <tr><!--danger active warning success-->
+                                    <th>#</th>
+                                    <th>Components</th>
+                                    <th>CPU</th>
+                                    <th>RAM</th>
+                                    <th>Slice</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- /.table-responsive -->
+                    </div>
+                    <!-- /.col-lg-4 (nested) -->
+                    <div class="col-lg-8">
+                        <div id="morris-bar-chart"></div>
+                    </div>
+                    <!-- /.col-lg-8 (nested) -->
+                </div>
+                <!-- /.row -->
+            </div>
+            <!-- /.panel-body -->
+        </div>
+    </div>
+    <!-- /.col-lg-8 -->
+    <div class="col-lg-4">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bell fa-fw"></i> Main Panel Infomation
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="jumbotron">
+                    <p>Component:
+                        <select id='MainPanelComponentSelect' onchange="updateChangeComponentMainInspectorPanel();">
+                        </select></p>
+                    <div id="MainPanelInfo"></div>
+                    <p>Link</p>
+                    <table class="table" id="MainPanelLinkInfo">
+                        <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>NIC</th>
+                            <th>LinkTo</th>
+                            <th>OtherNIC</th>
+                            <th>Loading</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                    <p id="InspectorPanelSlice"></p>
+                </div>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-bar-chart-o fa-fw"></i> Server Connect Status & Message
+            </div>
+            <div class="panel-body">
+                <div class="alert alert-danger alert-dismissable" id="MonitorLinkStatus">
+                    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
+                    <h4></h4>
+                </div>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-4 -->
+    <div class="col-lg-12">
+        <div class="col-md-4 column">
+            <select id='select_component_chart0' onchange="changeAreaChart(0);">
+            </select>
+            <div id="area_chart0" align=left></div><!Area Chart will display on gauge_div>
+        </div>
+
+        <div class="col-md-4 column">
+            <select id='select_component_chart1' onchange="changeAreaChart(1);">
+            </select>
+            <div id="area_chart1" align=left></div><!Area Chart will display on gauge_div>
+        </div>
+
+        <div class="col-md-4 column">
+            <select id='select_component_chart2' onchange="changeAreaChart(2);">
+            </select>
+            <div id="area_chart2" align=left></div><!Area Chart will display on gauge_div>
+        </div>
+    </div>
+</div>
+<!-- /.row -->
+</div>
+<!-- /#page-wrapper -->
+</div>
+<!-- /#wrapper -->
+
+    <!--<div class="row clearfix">-->
+
+
+    <!--</div>-->
+<!--</div>-->
+
+</body>
+
+<script type="text/javascript">//text:javascript
+var websocket;
+google.setOnLoadCallback(createWebSocket);
+google.load("visualization", "1", {packages:["corechart"]});//The google.load package name is "corechart"
+google.setOnLoadCallback(initialComponentInfo);//on ready=>run drawChart
+google.setOnLoadCallback(drawAreaChart_ComponentInfo);//on ready=>run drawChart
+//---------------------------------Canvas Initial---------------------------------
+var canvas = this.__canvas = new fabric.Canvas('c', { selection: true });
+fabric.Object.prototype.originX = fabric.Object.prototype.originY = 'center';
+canvas.backgroundColor = 'FFF';
+canvas.renderAll();
+//--------------------------------/Canvas Initial---------------------------------
+//---------------------------------Canvas Control---------------------------------
+canvas.on('object:moving', function(e)
+{
+    var p = e.target;
+    if(p.type=='image')
+    {
+        moveImage(p);
+    }
+    else if(p.type=='group')
+    {
+        var group=p.getObjects();
+        for(i=0;i<group.length;i++)
+        {
+            var top=p.top+p.getObjects()[i].top;
+            var left=p.left+p.getObjects()[i].left;
+            moveGroup(group[i],top,left);
+        }
+        canvas.renderAll();
+    }
+});
+canvas.on('mouse:down', function(options)
+{
+    if(options.target!=null)
+    {
+        if(options.target.type=='image')
+        {
+            document.getElementById('MainPanelComponentSelect').value=options.target.MainComponent.componentIndex;
+            updateChangeComponentMainInspectorPanel()
+        }
+        else if(options.target.type=='line')
+        {
+            console.log(options.target.linkIndex);
+        }
+        else if(options.target.type=='group')
+        {
+//            for(i=0;i<options.target.getObjects().length;i++)
+//            {
+//                var top=options.target.top+options.target.getObjects()[i].top;
+//                var left=options.target.left+options.target.getObjects()[i].left;
+//            }
+        }
+    }
+});
+//--------------------------------/Canvas Control---------------------------------
+//---------------------------------Icon URL Setting-------------------------------
+var ComponentIconURLListvar=[];
+ComponentIconURLListvar[0]=['./img/component_icon/host.png','./img/component_icon/host_v.png'];
+ComponentIconURLListvar[1]=['./img/component_icon/switch.png','./img/component_icon/switch_of.png', './img/component_icon/switch_v.png', './img/component_icon/switch_v_of.png'];
+ComponentIconURLListvar[2]=['./img/component_icon/host_of.png', './img/component_icon/host_v_of.png'];
+//10 Host       11 Host_v
+//20 Switch     21 Switch_of 22 Switch_V 23 Switch_v_of
+//30 Host_of    31 Host_v
+//--------------------------------/Icon URL Setting-------------------------------
+const numberOfDisplay=3;
+const numberOfAreaChartRow=100;
+var componentBucket=new Array();
+var SliceBucket=new Array();
+var linkBucket=new Array();
+var area_chart_data=new Array(numberOfDisplay);
+var area_chart_data_array=new Array(numberOfDisplay);
+var area_chart_options;
+var area_chart=new Array(numberOfDisplay);
+area_chart_data_array[0]=new Array(numberOfAreaChartRow);
+area_chart_data_array[1]=new Array(numberOfAreaChartRow);
+area_chart_data_array[2]=new Array(numberOfAreaChartRow);
+
+for(var i=0;i<area_chart_data_array.length;i++)
+{
+    area_chart_data_array[i][0]=["Time","CPU","RAM"];
+    for(var j=1;j<area_chart_data_array[i].length;j++)
+    {
+        area_chart_data_array[i][j]=['',1,1];//Time,CPU_value,Ram_value
+    }
+}
+var tempData=new Array();
+tempData[0]=new Data('CPU',10);
+tempData[1]=new Data('RAM',20);
+tempData[2]=new Data('CPU',30);
+tempData[3]=new Data('RAM',40);
+tempData[4]=new Data('CPU',50);
+tempData[5]=new Data('RAM',60);
+tempData[6]=new Data('CPU',70);
+tempData[7]=new Data('RAM',80);
+tempData[8]=new Data('CPU',90);
+tempData[9]=new Data('RAM',100);
+
+var AreaChartSelect=[];
+AreaChartSelect[0]=0;
+AreaChartSelect[1]=1;
+AreaChartSelect[2]=2;
+
+var OPConde=[];
+OPConde[0]="C";
+OPConde[1]="D";
+OPConde[2]="E";
+OPConde[3]="F";
+OPConde[4]="G";
+OPConde[5]="H";
+var hostNumber=1;
+var controllerNumber=1;
+var switchNumber=1;
+//------------------------------------------Set Random Components Information Data--------------------------
+var timer=setInterval("setRandom()",500);//run setRandom every 500ms
+function setRandom()
+{
+//-----------------------------------------Update-----------------------------------------------------------
+    updateFrequently();
+//----------------------------------------/Update------------------------------------------------------------
+}
+//---------------When Get The Data From Real Monitor---------------------------------------------------------
+updateSelectAreaChart();
+updateSelectSlice();
+updateMainInspectorPanelSelect();
+updateMainInspectorPanelLink();
+updateMainInspectorPanelSlice();
+updateFabricLineComponent();
+document.getElementById("select_component_chart0").value=0;
+document.getElementById("select_component_chart1").value=1;
+document.getElementById("select_component_chart2").value=2;
+//---------------/When Get The Data From Real Monitor--------------------------------------------------------
+//---------------------------------Using Google Data Format-------------------------------------------------
+function initialComponentInfo()
+{
+    for(var i=0;i<componentBucket.length;i++)
+    {
+        componentBucket[i].dataInfo = google.visualization.arrayToDataTable//google arrayToDateTable
+                ([
+                    ["Component","Value"],
+//                    [tempData[i*2].dataname,tempData[i*2].innerData],//(0,0),(0,1)
+//                    [tempData[i*2+1].dataname,tempData[i*2+1].innerData]//(1,0),(1,1)
+                    ['CPU',0],//(0,0),(0,1)
+                    ['RAM',0]//(1,0),(1,1)
+                ]);
+    }
+}
+//--------------------------------/Using Google Data Format-------------------------------------------------
+</script>
+</html>
